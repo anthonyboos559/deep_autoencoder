@@ -31,13 +31,13 @@ Deep_autoencoder::Deep_autoencoder(std::string train_file_path, std::string test
 	load_train_data(train_file_path);
 	load_test_data(test_file_path);
 	for (int i = 0; i < num_layers-1; i++) {
-		layers->at(i+1) = (Eigen::VectorXd::Zero(sizes[i+1]));
-		weights->at(i) = (Eigen::MatrixXd::Random(sizes[i+1], sizes[i]));
-		weight_changes->at(i) = (Eigen::MatrixXd::Zero(sizes[i+1], sizes[i]));
-		biases->at(i) = (Eigen::VectorXd::Random(sizes[i+1]));
-		bias_changes->at(i) = (Eigen::VectorXd::Zero(sizes[i+1]));
-		z_values->at(i) = (Eigen::VectorXd::Zero(sizes[i+1]));
-		deltas->at(i) = (Eigen::VectorXd::Zero(sizes[i+1]));
+		layers->at(i+1) = Eigen::VectorXd::Zero(sizes[i+1]);
+		weights->at(i) = Eigen::MatrixXd::Random(sizes[i+1], sizes[i]);
+		weight_changes->at(i) = Eigen::MatrixXd::Zero(sizes[i+1], sizes[i]);
+		biases->at(i) = Eigen::VectorXd::Random(sizes[i+1]);
+		bias_changes->at(i) = Eigen::VectorXd::Zero(sizes[i+1]);
+		z_values->at(i) = Eigen::VectorXd::Zero(sizes[i+1]);
+		deltas->at(i) = Eigen::VectorXd::Zero(sizes[i+1]);
 	}
 }
 
@@ -91,18 +91,18 @@ void Deep_autoencoder::feed_fordward(Eigen::VectorXd data) {
 	layers->at(0) = data;
 	for (int i = 0; i < num_layers-1; i++) {
 		z_values->at(i) = (weights->at(i) * layers->at(i)) + biases->at(i);
-		layers->at(i + 1) = z_values->at(i).unaryExpr(std::ptr_fun(sigmoid));
+		layers->at(i + 1) = z_values->at(i).unaryExpr(std::function(sigmoid));
 	}
 }
 
 void Deep_autoencoder::backpropegate() {
 	Eigen::VectorXd error = layers->back() - layers->front();
-	deltas->back() = z_values->back().unaryExpr(std::ptr_fun(sigmoid_d)).array() * error.array();
+	deltas->back() = z_values->back().unaryExpr(std::function(sigmoid_d)).array() * error.array();
 	for (int i = num_layers - 2; i >= 0; i--) {
 		weight_changes->at(i) += deltas->at(i) * layers->at(i).transpose();
 		bias_changes->at(i) += deltas->at(i);
 		if (i != 0) {
-			deltas->at(i-1) = (weights->at(i).transpose() * deltas->at(i)).array() * z_values->at(i-1).unaryExpr(std::ptr_fun(sigmoid_d)).array();
+			deltas->at(i-1) = (weights->at(i).transpose() * deltas->at(i)).array() * z_values->at(i-1).unaryExpr(std::function(sigmoid_d)).array();
 		}
 	}
 }
@@ -146,6 +146,63 @@ void Deep_autoencoder::sgd() {
 	}
 }
 
+void Deep_autoencoder::adam() {
+	int time_step = 0;
+	double alpha = 0.001;
+	double beta1 = 0.9;
+	double beta2 = 0.999;
+	double epsilon = pow(10, -8);
+	std::vector<Eigen::MatrixXd>* m_weights = new std::vector<Eigen::MatrixXd>(num_layers-1);
+	std::vector<Eigen::VectorXd>* m_biases = new std::vector<Eigen::VectorXd>(num_layers-1);
+	std::vector<Eigen::MatrixXd>* v_weights = new std::vector<Eigen::MatrixXd>(num_layers-1);
+	std::vector<Eigen::VectorXd>* v_biases = new std::vector<Eigen::VectorXd>(num_layers-1);
+	std::vector<Eigen::MatrixXd>* mc_weights = new std::vector<Eigen::MatrixXd>(num_layers-1);
+	std::vector<Eigen::VectorXd>* mc_biases = new std::vector<Eigen::VectorXd>(num_layers-1);
+	std::vector<Eigen::MatrixXd>* vc_weights = new std::vector<Eigen::MatrixXd>(num_layers-1);
+	std::vector<Eigen::VectorXd>* vc_biases = new std::vector<Eigen::VectorXd>(num_layers-1);
+
+	for (int i = 0; i < num_layers-1; i++) {
+		m_weights->at(i) = Eigen::MatrixXd::Zero(layer_sizes[i+1], layer_sizes[i]);
+		m_biases->at(i) = Eigen::VectorXd::Zero(layer_sizes[i+1]);
+		v_weights->at(i) = Eigen::MatrixXd::Zero(layer_sizes[i+1], layer_sizes[i]);
+		v_biases->at(i) = Eigen::VectorXd::Zero(layer_sizes[i+1]);
+		mc_weights->at(i) = Eigen::MatrixXd::Zero(layer_sizes[i+1], layer_sizes[i]);
+		mc_biases->at(i) = Eigen::VectorXd::Zero(layer_sizes[i+1]);
+		vc_weights->at(i) = Eigen::MatrixXd::Zero(layer_sizes[i+1], layer_sizes[i]);
+		vc_biases->at(i) = Eigen::VectorXd::Zero(layer_sizes[i+1]);
+	}
+
+	for (int i = 1; i <= epochs; i++) {
+		std::cout << "Epoch #" << i << std::endl;
+		for (train_iter = 0; train_iter < train_data->size(); train_iter++) {
+			feed_fordward(train_data->at(train_iter));
+			backpropegate();
+			if ((train_iter + 1) % batch_size == 0) {
+				time_step++;
+				for (int i = 0; i < num_layers - 1; i++) {
+					m_weights->at(i) = beta1 * m_weights->at(i) + (1-beta1) * (weight_changes->at(i)/batch_size);
+					m_biases->at(i) = beta1 * m_biases->at(i) + (1-beta1) * (bias_changes->at(i)/batch_size);
+					v_weights->at(i) = beta2 * v_weights->at(i).array() + (1-beta2) * (weight_changes->at(i)/batch_size).array().square();
+					v_biases->at(i) = beta2 * v_biases->at(i) + (1-beta2) * (bias_changes->at(i)/batch_size);
+
+					mc_weights->at(i) = m_weights->at(i)/(1-pow(beta1, time_step));
+					mc_biases->at(i) = m_biases->at(i)/(1-pow(beta1, time_step));
+					vc_weights->at(i) = v_weights->at(i)/(1-pow(beta2, time_step));
+					vc_biases->at(i) = v_biases->at(i)/(1-pow(beta2, time_step));
+
+					weights->at(i).array() -= alpha * (mc_weights->at(i).array()/((vc_weights->at(i).array().sqrt())+epsilon));
+					biases->at(i).array() -= alpha * (mc_biases->at(i).array()/((vc_biases->at(i).array().sqrt())+epsilon));
+
+					weight_changes->at(i).array() *= 0;
+					bias_changes->at(i).array() *= 0;
+				}
+			}
+		test_model();
+		std::cout << "Mean squared error: " << error << std::endl;
+		}
+	}
+}
+
 void Deep_autoencoder::print_out() {
 	
 	/*
@@ -165,7 +222,8 @@ void Deep_autoencoder::print_out() {
 int main()
 {
 	std::vector<int> size({784, 48, 24, 10, 24, 48, 784});
-	Deep_autoencoder test = Deep_autoencoder("C:\\Users\\Tony\\Desktop\\MNIST\\mnist_train.csv", "C:\\Users\\Tony\\Desktop\\MNIST\\mnist_test.csv", size, 3.0, 30, 100);
-	test.sgd();
+	Deep_autoencoder test = Deep_autoencoder("/home/tony/Documents/MNIST/mnist_train.csv", "/home/tony/Documents/MNIST/mnist_test.csv", size, 3.0, 30, 100);
+	//test.sgd();
+	test.adam();
 	//test.print_out();
 }

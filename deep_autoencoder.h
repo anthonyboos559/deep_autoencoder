@@ -38,5 +38,6 @@ public:
 	void train_model();
 	void test_model();
 	void sgd();
+	void adam();
 	void print_out();
 };
