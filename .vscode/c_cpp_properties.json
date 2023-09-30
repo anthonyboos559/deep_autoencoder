@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/tony/programming/eigen-3.4.0/**"
+                "/home/tony/programming/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

@@ -12,6 +12,18 @@ Deep_autoencoder::Deep_autoencoder(std::string train_file_path, std::string test
 	batch_size = batch;
 	io_size = sizes.front();
 
+	layers = new std::vector<Layer>; layers->reserve(num_layers);
+
+	for (int i = 0; i < num_layers-1; i++) {
+		if (i != 0 && i != num_layers-2) {
+			layers->push_back(Layer(&Eigen::VectorXd(layer_sizes[i]), &Eigen::MatrixXd::Random(layer_sizes[i+1], layer_sizes[i])));
+		}
+	}
+
+
+
+
+
 	train_data = new std::vector<Eigen::VectorXd>;
 	test_data = new std::vector<Eigen::VectorXd>;
 	layers = new std::vector<Eigen::VectorXd>(num_layers);

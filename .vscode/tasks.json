@@ -12,7 +12,7 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "/home/tony/programming/deep_autoencoder/activations.cpp"
+                "-I/home/tony/programming/deep_autoencoder/headers/*"
             ],
             "options": {
                 "cwd": "${fileDirname}"

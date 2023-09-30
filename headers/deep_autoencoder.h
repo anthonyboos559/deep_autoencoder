@@ -1,3 +1,4 @@
+#include "layer.h"
 #include <Eigen/Dense>
 #include <vector>
 #include <string>
@@ -7,13 +8,7 @@ class Deep_autoencoder {
 	//Storing each component in a vector, the indexs will indicate what layer they correspond to
 	std::vector<Eigen::VectorXd>* train_data;
 	std::vector<Eigen::VectorXd>* test_data;
-	std::vector<Eigen::VectorXd>* layers;
-	std::vector<Eigen::MatrixXd>* weights;
-	std::vector<Eigen::MatrixXd>* weight_changes;
-	std::vector<Eigen::VectorXd>* biases;
-	std::vector<Eigen::VectorXd>* bias_changes;
-	std::vector<Eigen::VectorXd>* z_values;
-	std::vector<Eigen::VectorXd>* deltas;
+	std::vector<Layer>* layers;
 
 	int io_size;
 	int num_layers;
