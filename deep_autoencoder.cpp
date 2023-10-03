@@ -12,39 +12,30 @@ Deep_autoencoder::Deep_autoencoder(std::string train_file_path, std::string test
 	batch_size = batch;
 	io_size = sizes.front();
 
-	layers = new std::vector<Layer>; layers->reserve(num_layers);
+	layers = new std::vector<Hidden_layer>(num_layers-2);
+	//layers->reserve(num_layers-2);
 
 	for (int i = 0; i < num_layers-1; i++) {
-		if (i != 0 && i != num_layers-2) {
-			layers->push_back(Layer(&Eigen::VectorXd(layer_sizes[i]), &Eigen::MatrixXd::Random(layer_sizes[i+1], layer_sizes[i])));
-		}
+		//The Matrix dimensions are NextLayer x (PrevLayer +1)
+		//The weight columns are given an extra column for the bias
+		weights->at(i) = Eigen::MatrixXd::Random(sizes[i+1], sizes[i]+1);
 	}
 
+	Input_layer(&Eigen::VectorXd(io_size));
+	for (int i = 0; i < layers->size(); i++) {
 
-
-
+	}
+	Output_layer(&Eigen::VectorXd(io_size));
 
 	train_data = new std::vector<Eigen::VectorXd>;
 	test_data = new std::vector<Eigen::VectorXd>;
-	layers = new std::vector<Eigen::VectorXd>(num_layers);
-	weights = new std::vector<Eigen::MatrixXd>(num_layers-1);
-	weight_changes = new std::vector<Eigen::MatrixXd>(num_layers-1);
-	biases = new std::vector<Eigen::VectorXd>(num_layers-1);
-	bias_changes = new std::vector<Eigen::VectorXd>(num_layers-1);
-	z_values = new std::vector<Eigen::VectorXd>(num_layers-1);
-	deltas = new std::vector<Eigen::VectorXd>(num_layers-1);
 
 	train_data->reserve(60000);
 	test_data->reserve(10000);
 
 	load_train_data(train_file_path);
 	load_test_data(test_file_path);
-	for (int i = 0; i < num_layers-1; i++) {
-		weights->at(i) = Eigen::MatrixXd::Random(sizes[i+1], sizes[i]);
-		weight_changes->at(i) = Eigen::MatrixXd::Zero(sizes[i+1], sizes[i]);
-		biases->at(i) = Eigen::VectorXd::Random(sizes[i+1]);
-		bias_changes->at(i) = Eigen::VectorXd::Zero(sizes[i+1]);
-	}
+	
 }
 
 void Deep_autoencoder::load_train_data(std::string file_path) {

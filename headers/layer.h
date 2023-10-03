@@ -1,15 +1,25 @@
 #include <Eigen/Dense>
 
-class Layer {
-
-    Eigen::VectorXd* const layer;
-    Eigen::VectorXd* const z_values;
-    Eigen::VectorXd* const deltas;
-    Eigen::MatrixXd* const prev_weights;
-    Eigen::MatrixXd* const next_weights;
+class Hidden_layer {
+    Eigen::VectorXd layer;
+    Eigen::VectorXd z_values;
+    Eigen::VectorXd deltas;
+    Eigen::MatrixXd* prev_weights;
+    Eigen::MatrixXd* next_weights;
 
 public:
-    Layer(Eigen::VectorXd* lyr, Eigen::MatrixXd* nxt_w = nullptr, Eigen::MatrixXd* prv_w = nullptr);
+    Hidden_layer(Eigen::VectorXd* lyr);
 
+};
 
+class Input_layer {
+
+public:
+    Input_layer(Eigen::VectorXd* lyr);
+};
+
+class Output_layer {
+
+public:
+    Output_layer(Eigen::VectorXd* lyr);
 };

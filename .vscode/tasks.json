@@ -6,13 +6,15 @@
             "command": "/usr/bin/g++",
             "args": [
                 "-O3",
-                "-I/home/tony/programming/eigen-3.4.0",
+                "-I",
+                "/home/tony/programming/deep_autoencoder/headers",
+                "-I",
+                "/home/tony/programming/eigen-3.4.0",
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "-I/home/tony/programming/deep_autoencoder/headers/*"
             ],
             "options": {
                 "cwd": "${fileDirname}"

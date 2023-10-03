@@ -8,6 +8,7 @@ class Deep_autoencoder {
 	//Storing each component in a vector, the indexs will indicate what layer they correspond to
 	std::vector<Eigen::VectorXd>* train_data;
 	std::vector<Eigen::VectorXd>* test_data;
+	std::vector<Eigen::MatrixXd>* weights;
 	std::vector<Layer>* layers;
 
 	int io_size;
