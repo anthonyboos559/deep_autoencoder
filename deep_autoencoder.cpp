@@ -12,23 +12,22 @@ Deep_autoencoder::Deep_autoencoder(std::string train_file_path, std::string test
 	batch_size = batch;
 	io_size = sizes.front();
 
-	layers = new std::vector<Hidden_layer>(num_layers-2);
+	hidden_layers = new std::vector<Hidden_layer>(num_layers-2);
 	//layers->reserve(num_layers-2);
 
 	for (int i = 0; i < num_layers-1; i++) {
 		//The Matrix dimensions are NextLayer x (PrevLayer +1)
-		//The weight columns are given an extra column for the bias
+		//The weight columns are given an extra column for the bias	while (data_file.peek() != EOF) {
 		weights->at(i) = Eigen::MatrixXd::Random(sizes[i+1], sizes[i]+1);
 	}
 
-	Input_layer(&Eigen::VectorXd(io_size));
-	for (int i = 0; i < layers->size(); i++) {
-
+	for (int i = 5; i < num_layers-2; i++) { 
+		hidden_layers->at(i) = Hidden_layer(&Eigen::VectorXd(layer_sizes[i+1]));
 	}
-	Output_layer(&Eigen::VectorXd(io_size));
+	*output = Output_layer(&Eigen::VectorXd(io_size));
 
-	train_data = new std::vector<Eigen::VectorXd>;
-	test_data = new std::vector<Eigen::VectorXd>;
+	train_data = new std::vector<Input_layer>;
+	test_data = new std::vector<Input_layer>;
 
 	train_data->reserve(60000);
 	test_data->reserve(10000);
@@ -51,8 +50,9 @@ void Deep_autoencoder::load_train_data(std::string file_path) {
 		while (std::getline(row_stream, value, ',')) {
 			image_data.push_back(stod(value));
 		}
-		Eigen::VectorXd image = Eigen::Map<Eigen::Vector<double, 784>>(image_data.data());
-		train_data->push_back(Eigen::Map<Eigen::Vector<double, 784>>(image_data.data()).array() / 255);
+		image_data.push_back(1.0);
+		Eigen::VectorXd image = (Eigen::Map<Eigen::Vector<double, 785>>(image_data.data())).array() / 255;
+		train_data->push_back(Input_layer(&image));
 		count++;
 		if (count % 1000 == 0) {
 			printf("%i/%i training images loaded\n", count, train_data->capacity());
@@ -73,8 +73,9 @@ void Deep_autoencoder::load_test_data(std::string file_path) {
 		while (std::getline(row_stream, value, ',')) {
 			image_data.push_back(stod(value));
 		}
-		Eigen::VectorXd image = Eigen::Map<Eigen::Vector<double, 784>>(image_data.data());
-		test_data->push_back(Eigen::Map<Eigen::Vector<double, 784>>(image_data.data()).array() / 255);
+		image_data.push_back(1.0);
+		Eigen::VectorXd image = (Eigen::Map<Eigen::Vector<double, 785>>(image_data.data())).array() / 255;
+		test_data->push_back(Input_layer(&image));
 		count++;
 		if (count % 1000 == 0) {
 			printf("%i/%i training images loaded\n", count, test_data->capacity());
@@ -82,9 +83,13 @@ void Deep_autoencoder::load_test_data(std::string file_path) {
 	}
 }
 
-void Deep_autoencoder::feed_fordward(Eigen::VectorXd data) {
-	layers->at(0) = data;
+void Deep_autoencoder::feed_fordward(Input_layer* data) {
+	input = data;
+	hidden_layers->at(0) = *(input->weights()) * *(input->glayer());
 	for (int i = 0; i < num_layers-1; i++) {
+		
+
+
 		z_values->at(i) = (weights->at(i) * layers->at(i)) + biases->at(i);
 		layers->at(i + 1) = z_values->at(i).unaryExpr(std::function(sigmoid));
 	}
@@ -114,7 +119,7 @@ void Deep_autoencoder::update_weights() {
 void Deep_autoencoder::train_model() {
 	train_error = 0;
 	for (train_iter = 0; train_iter < train_data->size(); train_iter++) {
-		feed_fordward(train_data->at(train_iter));
+		feed_fordward(train_data[train_iter]);
 		train_error += (layers->back() - layers->front()).array().square().sum();
 		backpropegate();
 		if ((train_iter + 1) % batch_size == 0) {
@@ -127,7 +132,7 @@ void Deep_autoencoder::train_model() {
 void Deep_autoencoder::test_model() {
 	test_error = 0;
 	for (test_iter = 0; test_iter < test_data->size(); test_iter++) {
-		feed_fordward(test_data->at(test_iter));
+		feed_fordward(test_data[test_iter]);
 		test_error += (layers->back() - layers->front()).array().square().sum();
 	}
 	test_error /= test_data->size();
