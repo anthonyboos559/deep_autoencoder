@@ -12,19 +12,32 @@ Deep_autoencoder::Deep_autoencoder(std::string train_file_path, std::string test
 	batch_size = batch;
 	io_size = sizes.front();
 
+	//Initalize the hidden layers
 	hidden_layers = new std::vector<Hidden_layer>(num_layers-2);
-	//layers->reserve(num_layers-2);
+	*input = Input_layer(Eigen::VectorXd(io_size+1));
+	Layer* prv_layer = input;
+	for (int i = 0; i < num_layers-2; i++) { 
+		//Extra input is given to the vector size to account for the bias term
+		hidden_layers->at(i) = Hidden_layer(Eigen::VectorXd::Ones(layer_sizes[i+1]+1));
+		prv_layer->set_next_layer(&hidden_layers->at(i));
+		hidden_layers->at(i).set_prev_Layer(prv_layer);
+		prv_layer = &hidden_layers->at(i);
+	}
+	*output = Output_layer(Eigen::VectorXd(io_size));
+	prv_layer->set_next_layer(output);
+	output->set_prev_Layer(prv_layer);
 
+	//Initalize the weights at random values
+	prv_layer = input;
 	for (int i = 0; i < num_layers-1; i++) {
 		//The Matrix dimensions are NextLayer x (PrevLayer +1)
-		//The weight columns are given an extra column for the bias	while (data_file.peek() != EOF) {
+		//The weights are given an extra column to account for the bias vector
 		weights->at(i) = Eigen::MatrixXd::Random(sizes[i+1], sizes[i]+1);
+		prv_layer->set_next_weights(&weights->at(i));
+		prv_layer = prv_layer->get_next_layer();
+		prv_layer->set_prev_weights(&weights->at(i));
 	}
 
-	for (int i = 5; i < num_layers-2; i++) { 
-		hidden_layers->at(i) = Hidden_layer(&Eigen::VectorXd(layer_sizes[i+1]));
-	}
-	*output = Output_layer(&Eigen::VectorXd(io_size));
 
 	train_data = new std::vector<Input_layer>;
 	test_data = new std::vector<Input_layer>;
@@ -51,8 +64,8 @@ void Deep_autoencoder::load_train_data(std::string file_path) {
 			image_data.push_back(stod(value));
 		}
 		image_data.push_back(1.0);
-		Eigen::VectorXd image = (Eigen::Map<Eigen::Vector<double, 785>>(image_data.data())).array() / 255;
-		train_data->push_back(Input_layer(&image));
+		//Eigen::VectorXd image = (Eigen::Map<Eigen::Vector<double, 785>>(image_data.data())).array() / 255;
+		train_data->push_back(Input_layer(Eigen::Map<Eigen::Vector<double, 785>>(image_data.data()).array() / 255));
 		count++;
 		if (count % 1000 == 0) {
 			printf("%i/%i training images loaded\n", count, train_data->capacity());
@@ -74,8 +87,8 @@ void Deep_autoencoder::load_test_data(std::string file_path) {
 			image_data.push_back(stod(value));
 		}
 		image_data.push_back(1.0);
-		Eigen::VectorXd image = (Eigen::Map<Eigen::Vector<double, 785>>(image_data.data())).array() / 255;
-		test_data->push_back(Input_layer(&image));
+		//Eigen::VectorXd image = (Eigen::Map<Eigen::Vector<double, 785>>(image_data.data())).array() / 255;
+		test_data->push_back(Input_layer(Eigen::Map<Eigen::Vector<double, 785>>(image_data.data()).array() / 255));
 		count++;
 		if (count % 1000 == 0) {
 			printf("%i/%i training images loaded\n", count, test_data->capacity());
@@ -85,18 +98,20 @@ void Deep_autoencoder::load_test_data(std::string file_path) {
 
 void Deep_autoencoder::feed_fordward(Input_layer* data) {
 	input = data;
-	hidden_layers->at(0) = *(input->weights()) * *(input->glayer());
-	for (int i = 0; i < num_layers-1; i++) {
-		
-
-
-		z_values->at(i) = (weights->at(i) * layers->at(i)) + biases->at(i);
-		layers->at(i + 1) = z_values->at(i).unaryExpr(std::function(sigmoid));
+	Layer* current_layer = input;
+	Layer* nxt_layer = current_layer->get_next_layer();
+	while (nxt_layer != nullptr) {
+		nxt_layer->set_z(*(current_layer->get_next_weights()) * *(nxt_layer->get_layer()));
+		*nxt_layer = nxt_layer->get_layer()->unaryExpr(sigmoid);
+		current_layer = nxt_layer;
+		nxt_layer = current_layer->get_next_layer();
 	}
 }
 
 void Deep_autoencoder::backpropegate() {
-	Eigen::VectorXd error = 2 * (layers->back() - layers->front());
+	Eigen::VectorXd error = -2 * (*(input->get_layer()) - *(output->get_layer()));
+
+	
 	deltas->back() = z_values->back().unaryExpr(std::function(sigmoid_d)).array() * error.array();
 	for (int i = num_layers - 2; i >= 0; i--) {
 		weight_changes->at(i) += deltas->at(i) * layers->at(i).transpose();
