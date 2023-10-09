@@ -10,7 +10,7 @@ protected:
 
 public:
     template <typename Derived>
-    Layer(const Eigen::DenseBase<Derived>& lyr) : layer(*lyr) {}
+    Layer(const Eigen::DenseBase<Derived>& lyr) : layer(lyr) {}
     Eigen::VectorXd* get_layer() { return &layer; }
     Layer* get_prev_layer() { return prev_layer; }
     Layer* get_next_layer() { return next_layer; }
@@ -20,14 +20,10 @@ public:
     Eigen::MatrixXd* get_prev_weights() { return prev_weights; }
     void set_next_weights(Eigen::MatrixXd* nxt_w) { next_weights = nxt_w; }
     void set_prev_weights(Eigen::MatrixXd* prv_w) { prev_weights = prv_w; }
-    template <typename Derived>
-    void operator = (const Eigen::DenseBase<Derived>& value) {
-        layer = *value;
-    }
-    virtual void set_z(const Eigen::Ref<const Eigen::VectorXd>& vals) =0;
-    virtual void get_z() =0;
-    virtual void set_delta(const Eigen::Ref<const Eigen::VectorXd>& vals) =0;
-    virtual void get_delta() =0;
+    virtual void set_z(const Eigen::Ref<const Eigen::VectorXd>& vals) {};
+    virtual Eigen::VectorXd* get_z() {};
+    virtual void set_delta(const Eigen::Ref<const Eigen::VectorXd>& vals) {};
+    virtual Eigen::VectorXd* get_delta() {};
 };
 
 class Input_layer: public Layer {
@@ -36,9 +32,7 @@ class Input_layer: public Layer {
 
 public:
     template <typename Derived>
-    Input_layer(const Eigen::DenseBase<Derived>& lyr) : Layer(lyr) prev_layer(nullptr) prev_weights(nullptr) {}
-    void set_z(const Eigen::Ref<const Eigen::VectorXd>& vals) {}
-    
+    Input_layer(const Eigen::DenseBase<Derived>& lyr) : prev_layer(nullptr), prev_weights(nullptr), Layer(lyr) {}
 };
 
 class Hidden_layer: public Layer {
@@ -47,10 +41,8 @@ class Hidden_layer: public Layer {
 public:
     template <typename Derived>
     Hidden_layer(const Eigen::DenseBase<Derived>& lyr) : Layer(lyr) {}
-    void set_z(const Eigen::Ref<const Eigen::VectorXd>& vals) { z_values.head(z_values.rows()-1) = vals; };
-
-    Eigen::VectorXd* z_vals();
-    void set_weights(Eigen::MatrixXd* prv_w, Eigen::MatrixXd* nxt_w);
+    void set_z(const Eigen::Ref<const Eigen::VectorXd>& vals) { z_values = vals; };
+    Eigen::VectorXd* get_z() { return &z_values; }
 };
 
 class Output_layer: public Hidden_layer {
@@ -59,5 +51,5 @@ class Output_layer: public Hidden_layer {
 
 public:
     template <typename Derived>
-    Output_layer(const Eigen::DenseBase<Derived>& lyr) : Hidden_layer(lyr) next_layer(nullptr) next_weights(nullptr) {}
+    Output_layer(const Eigen::DenseBase<Derived>& lyr) : next_layer(nullptr), next_weights(nullptr), Hidden_layer(lyr) {}
 };

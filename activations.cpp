@@ -1,5 +1,5 @@
 #include "activations.h"
-
+/*
 double relu(double weighted_sum) {
 	return weighted_sum > 0 ? weighted_sum : 0;
 }
@@ -14,4 +14,4 @@ double sigmoid(double weighted_sum) {
 
 double sigmoid_d(double weighted_sum) {
 	return exp(-weighted_sum) / pow((1 + exp(-weighted_sum)), 2);
-}
+}*/
