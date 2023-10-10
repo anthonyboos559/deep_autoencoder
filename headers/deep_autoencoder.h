@@ -8,9 +8,10 @@ class Deep_autoencoder {
 
 	std::vector<Eigen::VectorXd>* train_data;
 	std::vector<Eigen::VectorXd>* test_data;
-	std::vector<Eigen::MatrixXd>* weights;
-	std::vector<Layer*>* layers;
-	std::vector<Hidden_layer>* h_layers;
+	std::vector<Eigen::MatrixXd> weights;
+	std::vector<Eigen::MatrixXd> weight_changes;
+	std::vector<Layer*> layers;
+	std::vector<Hidden_layer> h_layers;
 
 	Input_layer input;
 	Output_layer output;
@@ -31,7 +32,7 @@ public:
 	Deep_autoencoder(std::string train_file_path, std::string test_file_path, std::vector<int> sizes, double learn_rate, int epoch, int batch);
 	void load_train_data(std::string file_path);
 	void load_test_data(std::string file_path);
-	void feed_fordward(Eigen::VectorXd& data);
+	void feed_fordward(Eigen::VectorXd &data);
 	void backpropegate();
 	void update_weights();
 	void train_model();

@@ -22,9 +22,9 @@ public:
     void set_next_weights(Eigen::MatrixXd* nxt_w) { next_weights = nxt_w; }
     void set_prev_weights(Eigen::MatrixXd* prv_w) { prev_weights = prv_w; }
     virtual void set_z(const Eigen::Ref<const Eigen::VectorXd>& vals) {};
-    virtual Eigen::VectorXd* get_z() {  };
+    virtual Eigen::VectorXd* get_z() {};
     virtual void set_delta(const Eigen::Ref<const Eigen::VectorXd>& vals) {};
-    virtual Eigen::VectorXd* get_delta() {  };
+    virtual Eigen::VectorXd* get_delta() {};
 };
 
 class Input_layer: public Layer {
@@ -45,7 +45,7 @@ protected:
 public:
     Hidden_layer() : Layer() {}
     template <typename Derived>
-    Hidden_layer(const Eigen::DenseBase<Derived>& lyr) : Layer(lyr) {}
+    Hidden_layer(const Eigen::DenseBase<Derived>& lyr) : z_values(lyr.head(lyr.rows()-1)), deltas(lyr.head(lyr.rows()-1)), Layer(lyr) {}
     void set_z(const Eigen::Ref<const Eigen::VectorXd>& vals) override { z_values = vals; };
     Eigen::VectorXd* get_z() override { return &z_values; }
     void set_delta(const Eigen::Ref<const Eigen::VectorXd>& vals) override {};
