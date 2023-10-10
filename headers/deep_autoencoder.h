@@ -9,10 +9,11 @@ class Deep_autoencoder {
 	std::vector<Eigen::VectorXd>* train_data;
 	std::vector<Eigen::VectorXd>* test_data;
 	std::vector<Eigen::MatrixXd>* weights;
-	std::vector<Layer>* layers;
+	std::vector<Layer*>* layers;
+	std::vector<Hidden_layer>* h_layers;
 
-	Layer* input;
-	Layer* output;
+	Input_layer input;
+	Output_layer output;
 
 	int io_size;
 	int num_layers;
