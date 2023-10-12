@@ -1,5 +1,4 @@
 #include "deep_autoencoder.h"
-#include "activations.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -12,12 +11,18 @@ Deep_autoencoder::Deep_autoencoder(std::string train_file_path, std::string test
 	batch_size = batch;
 	io_size = sizes.front();
 
+	for (int i = 0; num_layers-1; i++) {
+		layers.push_back(Layer(Eigen::VectorXd::Ones(layer_sizes[i+1]+1)));
+		layers.at(i).set_weights((Eigen::MatrixXd)Eigen::MatrixXd::Random(layer_sizes[i+1], layer_sizes[i]+1));
+	}
+
+	/*
 	//Initalize the hidden layers
 	//layers = new std::vector<Layer*>;
 	//h_layers = new std::vector<Hidden_layer>;
 	//layers.reserve(num_layers);
 	//h_layers->reserve(num_layers-2);
-	for (int i = 1; i < num_layers-1; i++) { 
+	for (int i = 0; i < num_layers-1; i++) { 
 		//Extra input is given to the vector size to account for the bias term
 		h_layers.push_back(Hidden_layer(Eigen::VectorXd::Ones(layer_sizes[i]+1)));
 	}
@@ -53,7 +58,7 @@ Deep_autoencoder::Deep_autoencoder(std::string train_file_path, std::string test
 		i++;
 	});
 	output.set_prev_weights(&weights.back());
-
+	*/
 	train_data = new std::vector<Eigen::VectorXd>;
 	test_data = new std::vector<Eigen::VectorXd>;
 
@@ -112,15 +117,18 @@ void Deep_autoencoder::load_test_data(std::string file_path) {
 }
 
 void Deep_autoencoder::feed_fordward(Eigen::VectorXd &data) {
-	*input.get_layer() = data;
+	Eigen::VectorXd next_layer = data;
+	for (Layer &lyr : layers) {
+		next_layer = lyr.forwardprop(next_layer);
+	}
 
-	std::for_each(++layers.begin(), layers.end(),
+	/*
+	std::for_each(layers.begin(), layers.end(),
 	[](Layer* lyr) {
 		lyr->set_z(*lyr->get_prev_weights() * *lyr->get_prev_layer()->get_layer());
 		lyr->get_layer()->head(lyr->get_layer()->rows()-1) = lyr->get_z()->unaryExpr(std::ref(sigmoid));
 	});
 	
-	/*
 	for (auto lyr : *layers) {
 		if (lyr != layers->front()) {
 			lyr->set_z(*lyr->get_prev_weights() * *lyr->get_prev_layer()->get_layer());
@@ -131,6 +139,9 @@ void Deep_autoencoder::feed_fordward(Eigen::VectorXd &data) {
 }
 
 void Deep_autoencoder::backpropegate() {
+
+
+	/*
 	Eigen::VectorXd error = 2 * (output.get_layer()->head(io_size) - input.get_layer()->head(io_size));
 	output.set_delta(output.get_z()->unaryExpr(std::ref(sigmoid_d)).array() * error.array());
 	int i = num_layers-2;
@@ -142,7 +153,7 @@ void Deep_autoencoder::backpropegate() {
 		i--;
 	});
 	
-	/*
+	
 	for (auto lyr : layers) {
 		if (lyr != layers->back()) {
 			lyr->set_delta(lyr->get_z()->unaryExpr(std::ref(sigmoid_d)).array() * lyr->get_delta()->array());
@@ -257,11 +268,11 @@ void Deep_autoencoder::adam() {
 */
 void Deep_autoencoder::print_out() {
 
-	Eigen::VectorXd test_vec = Eigen::VectorXd::Random(785);
+	Eigen::VectorXd test_vec = Eigen::VectorXd::Random(785).cwiseAbs();
 	feed_fordward(test_vec);
-	std::cout << "Before:\n" << *output.get_layer() << std::endl;
-	backpropegate();
-	std::cout << "After:\n" <<  *output.get_layer() << std::endl;
+	//std::cout << "Before:\n" << *output.get_layer() << std::endl;
+	//backpropegate();
+	std::cout << "After:\n" <<  layers.back().get_layer() << std::endl;
 	
 	
 	/*

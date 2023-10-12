@@ -13,8 +13,10 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "-g",
+                "/home/tony/programming/deep_autoencoder/layer.cpp",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
+                "${fileDirname}/${fileBasenameNoExtension}"
             ],
             "options": {
                 "cwd": "${fileDirname}"
