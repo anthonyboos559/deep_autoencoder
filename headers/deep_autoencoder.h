@@ -1,5 +1,4 @@
 #include "layer.h"
-#include <Eigen/Dense>
 #include <vector>
 #include <string>
 
@@ -10,6 +9,11 @@ class Deep_autoencoder {
 	std::vector<Eigen::VectorXd>* test_data;
 	std::vector<Layer> layers;
 
+	std::vector<double> training_errors;
+	std::vector<double> test_errors;
+
+	Eigen::VectorXd* input;
+
 	int io_size;
 	int num_layers;
 	std::vector<int> layer_sizes;
@@ -17,8 +21,6 @@ class Deep_autoencoder {
 	double learning_rate;
 	int epochs;
 	int batch_size;
-	int train_iter;
-	int test_iter;
 	double train_error;
 	double test_error;
 
@@ -26,12 +28,13 @@ public:
 	Deep_autoencoder(std::string train_file_path, std::string test_file_path, std::vector<int> sizes, double learn_rate, int epoch, int batch);
 	void load_train_data(std::string file_path);
 	void load_test_data(std::string file_path);
-	void feed_fordward(Eigen::VectorXd &data);
-	void backpropegate();
+	Eigen::VectorXd feed_fordward(Eigen::VectorXd &data);
+	void backpropegate(Eigen::VectorXd &error);
 	void update_weights();
-	void train_model();
+	double train_model(Eigen::VectorXd &data);
 	void test_model();
 	void mbgd();
 	void adam();
 	void print_out();
+	void save_data();
 };

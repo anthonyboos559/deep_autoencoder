@@ -1,3 +1,4 @@
+#include <cmath>
 
 double relu(double weighted_sum) { return weighted_sum > 0 ? weighted_sum : 0; }
 double relu_d(double weighted_sum) { return weighted_sum > 0 ? 1 : 0; }

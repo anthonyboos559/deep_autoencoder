@@ -1,17 +1,18 @@
 #include "layer.h"
-#include <Eigen/Dense>
+#include "activations.h"
 
 void Layer::set_deltas(const Eigen::VectorXd &lyr) {
-    deltas = (layer.unaryExpr(sigmoid_d)).array() * lyr.array();
+    deltas = z_values.unaryExpr(std::ref(sigmoid_d)).array() * lyr.array();
+    //deltas = deltas.array() * lyr.array();
 }
 
 Eigen::VectorXd Layer::forwardprop(const Eigen::VectorXd &lyr) {
-    layer = weights * lyr;
-    return layer.unaryExpr(sigmoid);
+    z_values = weights * lyr;
+    layer.head(layer.rows()-1) = z_values.unaryExpr(std::ref(sigmoid));
+    return layer;
 }
 
-template <typename Derived>
-Eigen::VectorXd Layer::backprop(const Eigen::DenseBase<Derived> &lyr) {
+Eigen::VectorXd Layer::backprop(const Eigen::VectorXd &lyr) {
     weight_changes += deltas * lyr.transpose();
-    return weights.transpose() * deltas;
+    return weights.leftCols(weights.cols()-1).transpose() * deltas;
 }

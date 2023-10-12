@@ -12,9 +12,7 @@
                 "/home/tony/programming/eigen-3.4.0",
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
-                "-g",
-                "/home/tony/programming/deep_autoencoder/layer.cpp",
+                "${fileDirname}/*.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
