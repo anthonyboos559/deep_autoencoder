@@ -37,4 +37,5 @@ public:
 	void adam();
 	void print_out();
 	void save_data();
+	void write_image(int epoch, Eigen::VectorXd before, Eigen::VectorXd after);
 };

@@ -87,6 +87,21 @@ void Deep_autoencoder::save_data() {
 	datafile.close();
 }
 
+void Deep_autoencoder::write_image(int epoch, Eigen::VectorXd before, Eigen::VectorXd after) {
+	std::ofstream datafile;
+	datafile.open("/home/tony/programming/deep_autoencoder/model_images.csv", std::ios_base::app);
+	datafile << epoch;
+	for (auto i : before) {
+		datafile << "," << i;
+	}
+	datafile << "\n" << epoch;
+	for (auto i : after) {
+		datafile  << "," << i;
+	}
+	datafile << "\n";
+	datafile.close();
+}
+
 Eigen::VectorXd Deep_autoencoder::feed_fordward(Eigen::VectorXd &data) {
 	Eigen::VectorXd next_layer = data;
 	for (Layer &lyr : layers) {
@@ -138,13 +153,14 @@ void Deep_autoencoder::mbgd() {
 				update_weights();
 			}
 		}
+		write_image(i, train_data->back().head(train_data->back().rows()-1), layers.back().get_layer().head(layers.back().get_layer().rows()-1));
 		training_errors.push_back(train_error / train_data->size());
 		std::cout << "Training error: " << training_errors.back() << std::endl;
 		test_model();
 		test_errors.push_back(test_error / test_data->size());
 		std::cout << "Test error: " << test_errors.back() << std::endl;
 	}
-	save_data();
+	//save_data();
 }
 /*
 void Deep_autoencoder::adam() {

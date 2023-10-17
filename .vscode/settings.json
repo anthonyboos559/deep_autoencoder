@@ -68,6 +68,9 @@
         "dense": "cpp",
         "*.expression": "cpp",
         "alignedvector3": "cpp",
-        "fft": "cpp"
+        "fft": "cpp",
+        "forward_list": "cpp",
+        "optional": "cpp",
+        "typeindex": "cpp"
     }
 }

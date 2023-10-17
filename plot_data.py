@@ -15,7 +15,7 @@ test = [float(i) for i in data[1]]
 
 pyplot.plot(epochs, train, 's-r', linewidth=2, label='Train set error')
 pyplot.plot(epochs, test, 's-b', linewidth=2, label='Test set error')
-pyplot.axis([0,30,20,60])
+pyplot.axis([0,30,0,60])
 pyplot.title("Model Performance")
 pyplot.xlabel("Epochs")
 pyplot.ylabel("Mean Squared Error")

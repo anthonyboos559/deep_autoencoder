@@ -3,7 +3,6 @@
 
 void Layer::set_deltas(const Eigen::VectorXd &lyr) {
     deltas = z_values.unaryExpr(std::ref(sigmoid_d)).array() * lyr.array();
-    //deltas = deltas.array() * lyr.array();
 }
 
 Eigen::VectorXd Layer::forwardprop(const Eigen::VectorXd &lyr) {
