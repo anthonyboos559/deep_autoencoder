@@ -153,7 +153,7 @@ void Deep_autoencoder::mbgd() {
 				update_weights();
 			}
 		}
-		write_image(i, train_data->back().head(train_data->back().rows()-1), layers.back().get_layer().head(layers.back().get_layer().rows()-1));
+		//write_image(i, train_data->back().head(train_data->back().rows()-1), layers.back().get_layer().head(layers.back().get_layer().rows()-1));
 		training_errors.push_back(train_error / train_data->size());
 		std::cout << "Training error: " << training_errors.back() << std::endl;
 		test_model();
@@ -243,7 +243,7 @@ void Deep_autoencoder::print_out() {
 
 int main()
 {
-	std::vector<int> size({784, 48, 24, 10, 24, 48, 784});
+	std::vector<int> size({784, 256, 128, 64, 128, 256, 784});
 	Deep_autoencoder test = Deep_autoencoder("/home/tony/Documents/MNIST/mnist_train_no_label.csv", "/home/tony/Documents/MNIST/mnist_test_no_label.csv", size, 0.1, 30, 100);
 	test.mbgd();
 	//test.adam();
