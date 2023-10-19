@@ -153,14 +153,14 @@ void Deep_autoencoder::mbgd() {
 				update_weights();
 			}
 		}
-		//write_image(i, train_data->back().head(train_data->back().rows()-1), layers.back().get_layer().head(layers.back().get_layer().rows()-1));
+		write_image(i, train_data->back().head(train_data->back().rows()-1), layers.back().get_layer().head(layers.back().get_layer().rows()-1));
 		training_errors.push_back(train_error / train_data->size());
 		std::cout << "Training error: " << training_errors.back() << std::endl;
 		test_model();
 		test_errors.push_back(test_error / test_data->size());
 		std::cout << "Test error: " << test_errors.back() << std::endl;
 	}
-	//save_data();
+	save_data();
 }
 /*
 void Deep_autoencoder::adam() {
