@@ -6,13 +6,13 @@ Eigen::VectorXd Linear_Layer::forwardprop(const Eigen::VectorXd &lyr) {
     return layer;
 }
 
-/* WIP/testing
+
 Eigen::VectorXd Activation_Layer::forwardprop(const Eigen::VectorXd &lyr) {
     //lyr is the previous linear-layer
-    layer.head(size) = lyr.unaryExpr(activation->primary); <- "a pointer to a bound function may only be used to call the function", WIP
+    layer.head(size) = activation->activate(lyr.head(size));
     return layer;
 }
-*/
+
 
 Eigen::VectorXd Sigmoid_Layer::forwardprop(const Eigen::VectorXd &lyr) {
     //lyr is the previous linear-layer
@@ -29,6 +29,10 @@ Eigen::VectorXd Relu_Layer::forwardprop(const Eigen::VectorXd &lyr) {
 Eigen::VectorXd Linear_Layer::backprop(const Eigen::VectorXd &delta) {
     //Input is the output of an activation layer backprop call
     return weights.leftCols(weights.cols()-1).transpose() * delta;
+}
+
+Eigen::VectorXd Activation_Layer::backprop(const Eigen::VectorXd &lyr) {
+    return activation->derivative(lyr);
 }
 
 Eigen::VectorXd Sigmoid_Layer::backprop(const Eigen::VectorXd &lyr) {

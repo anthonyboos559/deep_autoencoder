@@ -13,16 +13,7 @@ void Sequential::fit(std::vector<Eigen::VectorXd> &train_data, std::vector<Eigen
                 next_layer = lyr->forwardprop(next_layer);
             }
             Eigen::VectorXd loss = loss_function->get_loss(data, next_layer);
-            /*
-            Messy, thinking it'd be better to separate the linear and activation layers rather than one 'layers' vector
-            */
-            for (int i = layers.size()-1; i >= 0; i -= 2) {
-                layers.at(i)->set_error(loss);
-                loss = layers.at(i)->backprop(layers.at(i-1)->get_layer());
-                gradients.at(i) = layers.at(i-1)->get_weight_gradients(loss, layers.at(i-2)->get_layer());
-                loss = layers.at(i-1)->backprop(loss);
-            }
-            //Optimizer call would come next
+            
         }
     }
 }

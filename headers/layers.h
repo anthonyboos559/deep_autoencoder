@@ -34,20 +34,19 @@ public:
 class Activation_Layer : public Layer {
 protected:
     Eigen::VectorXd error;
-    //Activation* activation; testing...
+    Activation* activation;
 public:
-    //Activation_Layer(const int size, Activation* actv) : activation(actv), Layer(size) {} testing...
-    Activation_Layer(const int size) : Layer(size) {}
+    Activation_Layer(const int size, Activation &actv) : activation(&actv), Layer(size) {}
+    //Activation_Layer(const int size) : Layer(size) {}
     void set_error(const Eigen::VectorXd &lyr) override { error = lyr; }
     Eigen::VectorXd get_error() override { return error; }
-    //Next two defs not needed atm, will use if getting the Activation object to work, WIP
-    //Eigen::VectorXd forwardprop(const Eigen::VectorXd &lyr) override;
-    //Eigen::VectorXd backprop(const Eigen::VectorXd &delta) override;
+    Eigen::VectorXd forwardprop(const Eigen::VectorXd &lyr) override;
+    Eigen::VectorXd backprop(const Eigen::VectorXd &delta) override;
 };
 
 class Sigmoid_Layer : public Activation_Layer {
 public:
-    Sigmoid_Layer(const int size) : Activation_Layer(size) {}
+    Sigmoid_Layer(const int size) : Activation_Layer(size, Sigmoid()) {}
     Eigen::VectorXd forwardprop(const Eigen::VectorXd &lyr) override;
     Eigen::VectorXd backprop(const Eigen::VectorXd &lyr) override;
     double sigmoid(double weighted_sum) { return 1 / (1 + exp(-weighted_sum)); }
@@ -56,7 +55,7 @@ public:
 
 class Relu_Layer : public Activation_Layer {
 public:
-    Relu_Layer(const int size) : Activation_Layer(size) {}
+    Relu_Layer(const int size) : Activation_Layer(size, Relu()) {}
     Eigen::VectorXd forwardprop(const Eigen::VectorXd &lyr) override;
     Eigen::VectorXd backprop(const Eigen::VectorXd &lyr) override;
     double relu(double weighted_sum) { return weighted_sum > 0 ? weighted_sum : 0; }
