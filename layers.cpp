@@ -1,48 +1,49 @@
 #include "layers.h"
 
-Eigen::VectorXd Linear_Layer::forwardprop(const Eigen::VectorXd &lyr) {
-    //lyr is the previous activation layer
-    layer.head(size) = weights * lyr;
-    return layer;
+Eigen::VectorXd Layer::forwardprop(const Eigen::VectorXd &prv_lyr) {
+    //lyr is the previous layer
+    layer_values.head(size) = weights * prv_lyr;
+    return activation->activate(layer_values);
 }
 
-
-Eigen::VectorXd Activation_Layer::forwardprop(const Eigen::VectorXd &lyr) {
-    //lyr is the previous linear-layer
-    layer.head(size) = activation->activate(lyr.head(size));
-    return layer;
+Eigen::VectorXd Linear_Layer::forwardprop(const Eigen::VectorXd &prv_lyr) {
+    //lyr is the previous layer
+    layer_values.head(size) = weights * prv_lyr;
+    return layer_values;
 }
 
-
-Eigen::VectorXd Sigmoid_Layer::forwardprop(const Eigen::VectorXd &lyr) {
-    //lyr is the previous linear-layer
-    layer.head(size) = lyr.unaryExpr(sigmoid);
-    return layer;
+Eigen::VectorXd Sigmoid_Layer::forwardprop(const Eigen::VectorXd &prv_lyr) {
+    //lyr is the previous layer
+    layer_values.head(size) = weights * prv_lyr;
+    return layer_values.head(size).unaryExpr(sigmoid);
 }
 
-Eigen::VectorXd Relu_Layer::forwardprop(const Eigen::VectorXd &lyr) {
-    //lyr is the previous linear-layer
-    layer.head(size) = lyr.unaryExpr(relu);
-    return layer;
+Eigen::VectorXd Relu_Layer::forwardprop(const Eigen::VectorXd &prv_lyr) {
+    //lyr is the previous layer
+    layer_values.head(size) = (weights * prv_lyr);
+    return layer_values.head(size).unaryExpr(relu);
 }
 
-Eigen::VectorXd Linear_Layer::backprop(const Eigen::VectorXd &delta) {
-    //Input is the output of an activation layer backprop call
-    return weights.leftCols(weights.cols()-1).transpose() * delta;
+Eigen::VectorXd Layer::backprop(const Eigen::VectorXd &error) {
+    layer_gradients = activation->derivative(layer_values.head(size)).array() * error.array();
+    return weights.leftCols(weights.cols()-1).transpose() * layer_gradients;
 }
 
-Eigen::VectorXd Activation_Layer::backprop(const Eigen::VectorXd &lyr) {
-    return activation->derivative(lyr);
+Eigen::VectorXd Linear_Layer::backprop(const Eigen::VectorXd &error) {
+    layer_gradients = error;
+    return weights.leftCols(weights.cols()-1).transpose() * layer_gradients;
 }
 
-Eigen::VectorXd Sigmoid_Layer::backprop(const Eigen::VectorXd &lyr) {
-    //lyr is the linear layer associated with this activation layer
-    //Error is the output of a linear layer backprop call
-    return lyr.unaryExpr(sigmoid_d).array() * error.array();
+Eigen::VectorXd Sigmoid_Layer::backprop(const Eigen::VectorXd &error) {
+    layer_gradients = layer_values.head(size).unaryExpr(sigmoid_d).array() * error.array();
+    return weights.leftCols(weights.cols()-1).transpose() * layer_gradients;
 }
 
-Eigen::VectorXd Relu_Layer::backprop(const Eigen::VectorXd &lyr) {
-    //lyr is the linear layer associated with this activation layer
-    //Error is the output of a linear layer backprop call
-    return lyr.unaryExpr(relu_d).array() * error.array();
+Eigen::VectorXd Relu_Layer::backprop(const Eigen::VectorXd &error) {
+    layer_gradients = layer_values.head(size).unaryExpr(relu_d).array() * error.array();
+    return weights.leftCols(weights.cols()-1).transpose() * layer_gradients;
+}
+
+Eigen::MatrixXd Layer::get_weight_gradient(const Eigen::VectorXd &prv_lyr) {
+    return 
 }

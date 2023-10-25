@@ -3,8 +3,8 @@
 class Activation {
 public:
     Activation() {}
-    virtual Eigen::VectorXd activate(const Eigen::VectorXd lyr) =0;
-    virtual Eigen::VectorXd derivative(const Eigen::VectorXd lyr) =0;
+    virtual Eigen::VectorXd activate(const Eigen::VectorXd &lyr) =0;
+    virtual Eigen::VectorXd derivative(const Eigen::VectorXd &lyr) =0;
 };
 
 class Sigmoid : public Activation {
@@ -19,8 +19,15 @@ public:
 class Relu : public Activation {
 public:
     Relu() : Activation() {}
-    Eigen::VectorXd activate(const Eigen::VectorXd lyr) override { return lyr.unaryExpr(relu); }
-    Eigen::VectorXd derivative(const Eigen::VectorXd lyr) override { return lyr.unaryExpr(relu_d); }
+    Eigen::VectorXd activate(const Eigen::VectorXd &lyr) override { return lyr.unaryExpr(relu); }
+    Eigen::VectorXd derivative(const Eigen::VectorXd &lyr) override { return lyr.unaryExpr(relu_d); }
     double relu(double weighted_sum) { return weighted_sum > 0 ? weighted_sum : 0; }
     double relu_d(double weighted_sum) { return weighted_sum > 0 ? 1 : 0; };
+};
+
+class Linear : public Activation {
+public:
+    Linear() : Activation() {}
+    Eigen::VectorXd activate(const Eigen::VectorXd &lyr) override { return lyr; }
+    Eigen::VectorXd derivative(const Eigen::VectorXd &lyr) override { return Eigen::VectorXd::Ones(lyr.rows()); }
 };

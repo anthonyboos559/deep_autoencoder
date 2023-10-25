@@ -6,26 +6,23 @@ class Model {
 protected:
     Optimizer optimizer;
     Loss_Function* loss_function;
-    int epochs;
-    
-    //Unimplemented atm
-    std::vector<Eigen::MatrixXd> gradients;
+    std::vector<Layer*> layers;
 
 public:
-    Model(Optimizer opt, Loss_Function* lf, int epoch) : optimizer(opt), loss_function(lf), epochs(epoch) {}
+    Model(Optimizer opt, Loss_Function* lf) : optimizer(opt), loss_function(lf) {}
 };
 
-class Sequential : public Model {
+class Sequential_model : public Model {
 protected:
-    std::vector<Layer*> layers;
-    std::vector<Linear_Layer> linera_layers;
-    std::vector<Activation_Layer> activation_layers;
+
 public:
-    Sequential(Optimizer opt, Loss_Function* lf, int epoch) : Model(opt, lf, epoch) {}
+    Sequential_model(Optimizer opt, Loss_Function* lf) : Model(opt, lf) {}
     void add_layer(Layer &lyr) { layers.push_back(&lyr); }
     void pop_layer() { layers.pop_back(); }
     //Main training method
-    void fit(std::vector<Eigen::VectorXd> &train_data, std::vector<Eigen::VectorXd> &test_data) {}
+    void train() {}
+    void feedforward();
+    void backpropagate();
     //Unimplemented atm
     void initalize_gradients();
 };
