@@ -1,21 +1,29 @@
+#include "layers.h"
+#include <memory>
 
-//Optimizers currently take weight gradients
-class Optimizer {
-protected:
-    double learning_rate;
-public:
-    Optimizer(double lr) : learning_rate(lr) {}
-    void optimize(std::vector<Eigen::VectorXd> &gradients);
-};
+namespace Optimizers {
+    class MBGD {
+        double learning_rate;
+        int batch_size;
+        int processed = 0;
+    public:
+        MBGD(double lr, int bs) : learning_rate(lr), batch_size(bs){}
+        void optimize(std::vector<Layer*> &layers, std::vector<Eigen::MatrixXd> &gradients);
+    };
 
-class MBGD : public Optimizer {
-protected:
-    int batch_size;
-public:
-    MBGD(double lr, int bs) : batch_size(bs), Optimizer(lr) {}
-    void optimize(std::vector<Eigen::MatrixXd> &gradients);
-};
+    class ADAM {
+        double learning_rate = 0.001;
+        double beta1 = 0.9;
+        double beta2 = 0.999;
+        double epsilion = 1e-08;
+        int time_step = 0;
 
-class ADAM : public Optimizer {
+        std::vector<Eigen::MatrixXd> moment1;
+        std::vector<Eigen::MatrixXd> moment2;
 
-};
+    public:
+        ADAM() {}
+        void optimize(std::vector<Layer*> &layers, std::vector<Eigen::MatrixXd> &gradients);
+        void initalize_moments(std::vector<Eigen::MatrixXd> &gradients);
+    };
+}
