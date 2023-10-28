@@ -1,6 +1,4 @@
-#include <Eigen/Dense>
 #include "activations.h"
-
 
 class Layer {
 protected:
@@ -11,48 +9,63 @@ protected:
     
 public:
     //Init all layers to ones, size is +1 to account for bias term - size is saved for block expressions later
+    Layer() {}
     Layer(const int size) : layer_values(Eigen::VectorXd::Ones(size+1)), size(size) {}
+    
+    void set_layer_values(const Eigen::VectorXd &lyr);
+    void initalize_weights(const int col_size) { weights = Eigen::MatrixXd::Random(size, col_size).cwiseAbs(); }
+    void update_weights(const Eigen::MatrixXd changes) { weights -= changes; }
+    
     Eigen::VectorXd get_layer() { return layer_values; }
-    virtual Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr);
-    virtual Eigen::VectorXd backprop(const Eigen::VectorXd &error);
-    virtual Eigen::MatrixXd get_weight_gradient(const Eigen::VectorXd &prv_lyr);
-    virtual void update_weights(const Eigen::MatrixXd changes);
+    int get_size() { return size+1; }
+    Eigen::VectorXd get_gradient() { return layer_gradients; }
+    Eigen::MatrixXd* get_weights() { return &weights; }
+
+
+    virtual Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) =0;
+    virtual Eigen::VectorXd backprop(const Eigen::VectorXd &error) =0;
+    virtual Eigen::VectorXd get_activation() =0;
     
 };
 
 template <typename T>
-class Activation_layer : public Layer {
+class Activation_Layer : public Layer {
 protected:
     T activation;
 
 public:
-    Activation_layer(const int size, T act ) : layer_values(Eigen::VectorXd::Ones(size+1)), size(size), activation(act) {}
+    Activation_Layer(T act) : Layer() {}
+    Activation_Layer(const int size, T act ) : activation(act), Layer(size) {}
+    Eigen::VectorXd get_activation() { return activation.activate(layer_values); }
+    Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override {
+        layer_values.head(size) = weights * prv_lyr;
+        return get_activation();
+    }
+    Eigen::VectorXd backprop(const Eigen::VectorXd &error) override {
+        layer_gradients = activation.derivative(layer_values.head(size)).array() * error.array();
+        return weights.leftCols(weights.cols()-1).transpose() * layer_gradients;
+    }
+    
 };
 
-class Linear_Layer : public Activation_layer<Linear> {
+class Linear_Layer : public Activation_Layer<Linear> {
 public:
-    Linear_Layer(const int size) : Activation_layer(size, Linear()) {}
-    void update_weights (const Eigen::MatrixXd &wghts) { weights = wghts; }
-    Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override;
-    Eigen::VectorXd backprop(const Eigen::VectorXd &error) override;
-    double linear(const double weighted_sum) { return weighted_sum; }
-    double linear_d(const double weighted_sum) { return 1; }
+    Linear_Layer() : Activation_Layer(Linear()) {}
+    Linear_Layer(const int size) : Activation_Layer(size, Linear()) {}
 };
 
-class Sigmoid_Layer : public Activation_layer<Sigmoid> {
+class Input_Layer : public Linear_Layer {
 public:
-    Sigmoid_Layer(const int size) : Activation_layer(size, Sigmoid()) {}
-    Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override;
-    Eigen::VectorXd backprop(const Eigen::VectorXd &error) override;
-    double sigmoid(const double weighted_sum) { return 1 / (1 + exp(-weighted_sum)); }
-    double sigmoid_d(const double weighted_sum) { return exp(-weighted_sum) / pow((1 + exp(-weighted_sum)), 2); }
+    Input_Layer() : Linear_Layer() {}
+    Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override { return layer_values; }
 };
 
-class Relu_Layer : public Activation_layer<Relu> {
+class Sigmoid_Layer : public Activation_Layer<Sigmoid> {
 public:
-    Relu_Layer(const int size) : Activation_layer(size, Relu()) {}
-    Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override;
-    Eigen::VectorXd backprop(const Eigen::VectorXd &error) override;
-    double relu(const double weighted_sum) { return weighted_sum > 0 ? weighted_sum : 0; }
-    double relu_d(const double weighted_sum) { return weighted_sum > 0 ? 1 : 0; }
+    Sigmoid_Layer(const int size) : Activation_Layer(size, Sigmoid()) {}
+};
+
+class Relu_Layer : public Activation_Layer<Relu> {
+public:
+    Relu_Layer(const int size) : Activation_Layer(size, Relu()) {}
 };

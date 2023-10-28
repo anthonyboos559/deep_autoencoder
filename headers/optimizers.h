@@ -2,12 +2,11 @@
 #include <memory>
 
 namespace Optimizers {
-    class MBGD {
+    class SGD {
         double learning_rate;
-        int batch_size;
-        int processed = 0;
+
     public:
-        MBGD(double lr, int bs) : learning_rate(lr), batch_size(bs){}
+        SGD(double lr) : learning_rate(lr) {}
         void optimize(std::vector<Layer*> &layers, std::vector<Eigen::MatrixXd> &gradients);
     };
 
