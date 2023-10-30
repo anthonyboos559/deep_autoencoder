@@ -1,4 +1,5 @@
 #include "activations.h"
+#include <iostream>
 
 class Layer {
 protected:
@@ -13,11 +14,11 @@ public:
     Layer(const int size) : layer_values(Eigen::VectorXd::Ones(size+1)), size(size) {}
     
     void set_layer_values(const Eigen::VectorXd &lyr);
-    void initalize_weights(const int col_size) { weights = Eigen::MatrixXd::Random(size, col_size).cwiseAbs(); }
+    void initalize_weights(const int col_size) { weights = Eigen::MatrixXd::Random(size, col_size+1); }
     void update_weights(const Eigen::MatrixXd changes) { weights -= changes; }
     
     Eigen::VectorXd get_layer() { return layer_values; }
-    int get_size() { return size+1; }
+    int get_size() { return size; }
     Eigen::VectorXd get_gradient() { return layer_gradients; }
     Eigen::MatrixXd* get_weights() { return &weights; }
 
@@ -38,6 +39,7 @@ public:
     Activation_Layer(const int size, T act ) : activation(act), Layer(size) {}
     Eigen::VectorXd get_activation() { return activation.activate(layer_values); }
     Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override {
+        //std::cout << prv_lyr << '\n' << weights << std::endl;
         layer_values.head(size) = weights * prv_lyr;
         return get_activation();
     }

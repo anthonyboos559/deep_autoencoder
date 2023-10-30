@@ -1,5 +1,12 @@
 #include "optimizers.h"
 
+void Optimizers::SGD::optimize(std::vector<Layer*> &layers, std::vector<Eigen::MatrixXd> &gradients) {
+    for (int i = 0; i < gradients.size(); i++) {
+        layers.at(i+1)->update_weights(learning_rate * gradients.at(i));
+        gradients.at(i).setZero();
+    }
+}
+
 void Optimizers::ADAM::initalize_moments(std::vector<Eigen::MatrixXd> &gradients) {
     for (auto gradient : gradients) {
         moment1.push_back(Eigen::MatrixXd::Zero(gradient.rows(), gradient.cols()));
@@ -13,7 +20,7 @@ void Optimizers::ADAM::optimize(std::vector<Layer*> &layers, std::vector<Eigen::
     }
     time_step++;
     for (int i = 0; i < gradients.size(); i++) {
-        moment1.at(1) = (beta1 * moment1.at(i) + (1 - beta1) * gradients.at(i)) / (1 - pow(beta1, time_step));
+        moment1.at(i) = (beta1 * moment1.at(i) + (1 - beta1) * gradients.at(i)) / (1 - pow(beta1, time_step));
         moment2.at(i) = (beta2 * moment2.at(i) + (1 - beta2) * (Eigen::MatrixXd)gradients.at(i).array().square()) / (1 - pow(beta2, time_step));
         layers.at(i+1)->update_weights(learning_rate * (moment1.at(i).array() / (moment2.at(i).array().sqrt() + epsilion).array()));
         gradients.at(i).setZero();
