@@ -10,7 +10,7 @@ protected:
     
 public:
     //Init all layers to ones, size is +1 to account for bias term - size is saved for block expressions later
-    Layer(const int size) : layer_values(Eigen::VectorXd::Ones(size+1)), size(size) {}
+    Layer(const int size) : size(size), layer_values(Eigen::VectorXd::Ones(size+1)) {}
 
     //Used for updating the Input layer with input data for the forward pass
     void set_layer_values(const Eigen::VectorXd &lyr); 
@@ -38,6 +38,7 @@ public:
     Input_Layer(const int size) : Layer(size) {}
     Eigen::VectorXd get_activation() override { return layer_values; }
     Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override { return layer_values; }
+    Eigen::VectorXd backprop(const Eigen::VectorXd &error) override {}
 };
 
 template <typename T>
@@ -46,7 +47,7 @@ protected:
     T activation;
 
 public:
-    Activation_Layer(const int size, T act ) : activation(act), Layer(size) {}
+    Activation_Layer(const int size, T act ) : Layer(size), activation(act) {}
     Eigen::VectorXd get_activation() override { return activation.activate(layer_values); }
     Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override {
         //std::cout << prv_lyr << '\n' << weights << std::endl;

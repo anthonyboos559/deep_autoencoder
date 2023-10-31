@@ -1,5 +1,4 @@
 #include "layers.h"
-#include <memory>
 
 namespace Optimizers {
     class SGD {

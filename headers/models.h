@@ -6,35 +6,28 @@
 template <typename T, typename U>
 class Model {
 protected:
+    //Templated to allow for varying optimizers and loss functions
     T optimizer;
     U loss_function;
+    
+    //Collections to store core model data
     std::vector<Layer*> layers;
     std::vector<Eigen::MatrixXd> gradients;
     std::vector<Eigen::VectorXd> train_data;
 	std::vector<Eigen::VectorXd> test_data;
-    int batch_size = 0;
-    int epochs = 0;
+    
+    int batch_size = 1; //Batch size controls how often the weights are updated
+    int epochs = 1; //Train set iterations
     double train_error = 0;
     double test_error = 0;
 
 public:
-    Model(T opt, U lf) : optimizer(opt), loss_function(lf) { layers.push_back(new Input_Layer(0)); }
-
-    void print_data() {
-        std::cout << "Layers: ";
-        for (auto lyr : this->layers) {
-            std::cout << lyr->get_size() << " ";
-        }
-        std::cout << std::endl << "Gradients: ";
-        for (Eigen::MatrixXd &grad : this->gradients) {
-            std::cout << "(" << grad.rows() << "," << grad.cols() << ") ";
-        }
-        std::cout << std::endl;
-    }
+    Model(T opt, U lf) : optimizer(opt), loss_function(lf) { layers.push_back(new Input_Layer(0)); } //Ensures first layer is always an Input layer
 
     void set_batch_size(const int size) { batch_size = size; }
     void set_epochs(const int epoch) { epochs = epoch; }
 
+    //Static data loading for now
     void load_train_data(std::string file_path) {
         std::ifstream data_file (file_path);
         std::string row_data;
@@ -47,14 +40,14 @@ public:
             while (std::getline(row_stream, value, ',')) {
                 image_data.push_back(stod(value));
             }
-            train_data.push_back(Eigen::Map<Eigen::Vector<double, 784>>(image_data.data()).array() / 255);
+            train_data.push_back(Eigen::Map<Eigen::Vector<double, 784>>(image_data.data()).array());
             count++;
             if (count % 1000 == 0) {
                 printf("%i training images loaded\n", count);
             }
         }
     }
-
+    //Static data loading for now
     void load_test_data(std::string file_path) {
         std::ifstream data_file(file_path);
         std::string row_data;
@@ -67,7 +60,7 @@ public:
             while (std::getline(row_stream, value, ',')) {
                 image_data.push_back(stod(value));
             }
-            test_data.push_back(Eigen::Map<Eigen::Vector<double, 784>>(image_data.data()).array() / 255);
+            test_data.push_back(Eigen::Map<Eigen::Vector<double, 784>>(image_data.data()).array());
             count++;
             if (count % 1000 == 0) {
                 printf("%i training images loaded\n", count);
@@ -89,7 +82,6 @@ public:
         this->layers.front()->set_layer_values(data);
         Eigen::VectorXd next_layer = data;
         for (Layer* lyr : this->layers) {
-            //std::cout << next_layer.transpose() << std::endl;
             next_layer = lyr->forwardprop(next_layer);
         }
         return next_layer.head(next_layer.rows()-1);
@@ -97,10 +89,7 @@ public:
 
     void backpropagate(Eigen::VectorXd error) {
         for (int i = this->layers.size()-1; i >= 1; i--) {
-            //std::cout << error.transpose() << std::endl;
             error = this->layers.at(i)->backprop(error);
-            //std::cout << this->layers.at(i)->get_gradient().transpose() << std::endl;
-            //std::cout << this->layers.at(i-1)->get_activation().transpose() << std::endl;
             this->gradients.at(i-1) += this->layers.at(i)->get_gradient() * this->layers.at(i-1)->get_activation().transpose();
         }
     }
@@ -111,9 +100,6 @@ public:
             std::random_shuffle(this->train_data.begin(), this->train_data.end());
             for (int i = 0; i < this->train_data.size(); i++) {
                 output = feedforward(this->train_data.at(i));
-                //std::cout << "Out: " << output << std::endl;
-                //std::cout << "Err: " << this->loss_function.error(this->train_data.at(i), output) << std::endl;
-                //std::cout << "Der: " << this->loss_function.derivative(this->train_data.at(i), output) << std::endl;
                 this->train_error += this->loss_function.error(this->train_data.at(i), output);
                 backpropagate(this->loss_function.derivative(this->train_data.at(i), output));
                 if ((i+1) % this->batch_size == 0) {
