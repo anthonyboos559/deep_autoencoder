@@ -4,29 +4,40 @@
 class Layer {
 protected:
     int size;
-    Eigen::VectorXd layer_values;
-    Eigen::VectorXd layer_gradients;
+    Eigen::VectorXd layer_values; //Unactivated values, last entry is always 1 to account for the bias
+    Eigen::VectorXd layer_gradients; //Gradient of the layer with respect to the loss function
     Eigen::MatrixXd weights;
     
 public:
     //Init all layers to ones, size is +1 to account for bias term - size is saved for block expressions later
-    Layer() {}
     Layer(const int size) : layer_values(Eigen::VectorXd::Ones(size+1)), size(size) {}
-    
-    void set_layer_values(const Eigen::VectorXd &lyr);
-    void initalize_weights(const int col_size) { weights = Eigen::MatrixXd::Random(size, col_size+1); }
-    void update_weights(const Eigen::MatrixXd changes) { weights -= changes; }
-    
-    Eigen::VectorXd get_layer() { return layer_values; }
-    int get_size() { return size; }
-    Eigen::VectorXd get_gradient() { return layer_gradients; }
-    Eigen::MatrixXd* get_weights() { return &weights; }
 
+    //Used for updating the Input layer with input data for the forward pass
+    void set_layer_values(const Eigen::VectorXd &lyr); 
+    
+    //Getters
+    int get_size() { return size; }
+    Eigen::VectorXd get_layer() { return layer_values; }
+    Eigen::VectorXd get_gradient() { return layer_gradients; }
+    Eigen::MatrixXd* get_weights() { return &weights; } //Returns ptr since its used only to get info about the weights (Rows/Cols)
+
+    //Input is the size of the previous/input layer
+    void initalize_weights(const int col_size) { weights = Eigen::MatrixXd::Random(size, col_size+1); } 
+
+    //Input comes from the optimizer
+    void update_weights(const Eigen::MatrixXd changes) { weights -= changes; }
 
     virtual Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) =0;
     virtual Eigen::VectorXd backprop(const Eigen::VectorXd &error) =0;
     virtual Eigen::VectorXd get_activation() =0;
     
+};
+
+class Input_Layer : public Layer {
+public:
+    Input_Layer(const int size) : Layer(size) {}
+    Eigen::VectorXd get_activation() override { return layer_values; }
+    Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override { return layer_values; }
 };
 
 template <typename T>
@@ -35,9 +46,8 @@ protected:
     T activation;
 
 public:
-    Activation_Layer(T act) : Layer() {}
     Activation_Layer(const int size, T act ) : activation(act), Layer(size) {}
-    Eigen::VectorXd get_activation() { return activation.activate(layer_values); }
+    Eigen::VectorXd get_activation() override { return activation.activate(layer_values); }
     Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override {
         //std::cout << prv_lyr << '\n' << weights << std::endl;
         layer_values.head(size) = weights * prv_lyr;
@@ -52,14 +62,7 @@ public:
 
 class Linear_Layer : public Activation_Layer<Linear> {
 public:
-    Linear_Layer() : Activation_Layer(Linear()) {}
     Linear_Layer(const int size) : Activation_Layer(size, Linear()) {}
-};
-
-class Input_Layer : public Linear_Layer {
-public:
-    Input_Layer() : Linear_Layer() {}
-    Eigen::VectorXd forwardprop(const Eigen::VectorXd &prv_lyr) override { return layer_values; }
 };
 
 class Sigmoid_Layer : public Activation_Layer<Sigmoid> {

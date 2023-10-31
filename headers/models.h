@@ -18,7 +18,7 @@ protected:
     double test_error = 0;
 
 public:
-    Model(T opt, U lf) : optimizer(opt), loss_function(lf) { layers.push_back(new Input_Layer()); }
+    Model(T opt, U lf) : optimizer(opt), loss_function(lf) { layers.push_back(new Input_Layer(0)); }
 
     void print_data() {
         std::cout << "Layers: ";
